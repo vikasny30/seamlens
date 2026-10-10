@@ -74,6 +74,8 @@ Commits are attributed to an AI coding agent from commit metadata: `Co-authored-
 
 For each cohort it reports test-touch rate, how often commits are later reverted, fix-follow-up within 7 days (a proxy for escaped defects), and rework within 14 days, each with a **95% Wilson confidence interval**. A comparison needs at least 30 commits per cohort and non-overlapping intervals before it says one side is better or worse; otherwise it says *insufficient data* or *no detectable difference*.
 
+**Size-adjusted by default.** Agent commits tend to be larger, and size drives every metric, so each overall difference is re-checked inside four commit-size bands and reported next to the pooled number. On Deno and Hugging Face Transformers the pooled "agent commits touch tests more" result largely disappears within size bands; see [docs/results/open-source-agent-impact.md](docs/results/open-source-agent-impact.md).
+
 What it will not tell you, and says so in every report: attribution is a **lower bound** (unmarked agent work lands in "other"), squash merges hide authorship, commit size is not value, and fix-follow-up is a proxy, not a measured defect. It never ranks people.
 
 ## Org metrics

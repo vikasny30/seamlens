@@ -5,7 +5,8 @@ import type { Report } from "./index.js";
 export function toText(r: Report, min: Severity = "info"): string {
   const L: string[] = [];
   L.push(`SeamLens: ${r.summary.root}`);
-  L.push(`Contract health ${r.score.overall}/100 (grade ${r.score.grade})   ${r.score.counts.error} errors, ${r.score.counts.warning} warnings, ${r.score.counts.info} info`);
+  const none = !(r.summary.operations + r.summary.rpcs + r.summary.tables + r.summary.routes + r.summary.sourceFiles);
+  L.push(none ? "Nothing to analyse: no contracts, routes or code were found here (a score would be meaningless)." : `Contract health ${r.score.overall}/100 (grade ${r.score.grade})   ${r.score.counts.error} errors, ${r.score.counts.warning} warnings, ${r.score.counts.info} info`);
   L.push(`Found: ${r.summary.operations} operations, ${r.summary.rpcs} rpcs, ${r.summary.tables} tables, ${r.summary.routes} routes, ${r.summary.sourceFiles} source files`);
   L.push("");
   for (const f of r.findings.filter(f => SEVERITY_RANK[f.severity] >= SEVERITY_RANK[min])) {

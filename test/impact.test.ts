@@ -6,7 +6,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { wilson, percentile, median, rate } from "../src/impact/stats.js";
 import { classify, compilePatterns } from "../src/impact/attribution.js";
-import { analyzeImpact, impactToText, impactToMarkdown } from "../src/impact/index.js";
+import { analyzeImpact, analyzeCommits, impactToText, impactToMarkdown } from "../src/impact/index.js";
 import type { Commit } from "../src/impact/git-log.js";
 
 const near = (a: number, b: number, eps = 0.002) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
@@ -107,4 +107,55 @@ test("impact: small cohorts are never given a verdict", () => {
     const none = (() => { const d2 = fs.mkdtempSync(path.join(os.tmpdir(), "seamlens-none-")); const s2 = (...a: string[]) => execFileSync("git", ["-C", d2, ...a], { stdio: "pipe" }); s2("init", "-q"); s2("config", "user.email", "t@t.t"); s2("config", "user.name", "t"); s2("config", "commit.gpgsign", "false"); fs.writeFileSync(path.join(d2, "a.ts"), "x"); s2("add", "-A"); s2("commit", "-q", "-m", "one"); const out = analyzeImpact(d2); fs.rmSync(d2, { recursive: true, force: true }); return out; })();
     assert.match(none.caveats[0], /No agent-attributed commits/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---- size confounding: the lesson from running this on real open-source history ------------------------------------------
+const SIZES: Record<string, number> = { small: 5, mid: 30, large: 100, xl: 300 };   // + 5 test lines when a test is touched, so each stays inside its band
+let counter = 0;
+function synth(cohort: "agent" | "other", band: keyof typeof SIZES, n: number, testRate: number): Commit[] {
+  const out: Commit[] = [];
+  for (let i = 0; i < n; i++) {
+    const withTest = i < Math.round(n * testRate);
+    counter++;
+    out.push({
+      sha: counter.toString(16).padStart(40, "0"), parents: ["p"], author: "Dev", email: `dev${counter % 7}@x.io`, ts: 1_700_000_000 + counter * 3600,
+      subject: `change ${counter}`, body: cohort === "agent" ? "Co-Authored-By: Claude <noreply@anthropic.com>" : "",
+      files: [{ path: `src/mod${counter % 13}.ts`, added: SIZES[band], deleted: 0 }, ...(withTest ? [{ path: `test/mod${counter % 13}.test.ts`, added: 5, deleted: 0 }] : [])],
+    });
+  }
+  return out;
+}
+const TOUCH = { small: 0.1, mid: 0.4, large: 0.7, xl: 0.8 };
+
+test("size confounding: a gap that commit size explains is flagged, not reported as an agent effect", () => {
+  // identical test-touch behaviour inside every size band; agents just write bigger commits
+  const commits = [
+    ...synth("other", "small", 400, TOUCH.small), ...synth("other", "mid", 100, TOUCH.mid), ...synth("other", "large", 60, TOUCH.large), ...synth("other", "xl", 40, TOUCH.xl),
+    ...synth("agent", "small", 40, TOUCH.small), ...synth("agent", "mid", 60, TOUCH.mid), ...synth("agent", "large", 100, TOUCH.large), ...synth("agent", "xl", 100, TOUCH.xl),
+  ];
+  const r = analyzeCommits(commits);
+  const t = r.comparison.find(c => c.metric === "Test-touch rate")!;
+  assert.equal(t.verdict, "agent-assisted is better", "the pooled comparison is fooled by size");
+  assert.match(t.sizeAdjusted ?? "", /may be explained by commit size/, t.sizeAdjusted);
+  assert.equal(r.stratified.length, 4);
+  for (const st of r.stratified) assert.equal(st.comparison[0].verdict, "no detectable difference", st.band);
+  assert.match(impactToText(r), /size-adjusted: no size band shows a detectable difference/);
+  assert.match(impactToMarkdown(r), /Size-adjusted reading/);
+});
+
+test("size confounding: a genuine effect that holds in every band is reported as holding", () => {
+  const commits: Commit[] = [];
+  for (const band of ["small", "mid", "large", "xl"] as const) commits.push(...synth("other", band, 80, 0.3), ...synth("agent", band, 80, 0.9));
+  const t = analyzeCommits(commits).comparison.find(c => c.metric === "Test-touch rate")!;
+  assert.equal(t.verdict, "agent-assisted is better");
+  assert.match(t.sizeAdjusted ?? "", /holds in 4 of 4 size bands/);
+});
+
+test("size confounding: bands with too few commits are not over-interpreted", () => {
+  const commits = [...synth("other", "small", 200, 0.1), ...synth("agent", "small", 40, 0.9), ...synth("other", "xl", 10, 0.5), ...synth("agent", "xl", 10, 0.5)];
+  const r = analyzeCommits(commits);
+  const xl = r.stratified.find(s => s.band === "201+ lines")!;
+  assert.equal(xl.comparison[0].verdict, "insufficient data");
+  const t = r.comparison.find(c => c.metric === "Test-touch rate")!;
+  assert.match(t.sizeAdjusted ?? "", /not enough commits in each size band|holds in/);
 });

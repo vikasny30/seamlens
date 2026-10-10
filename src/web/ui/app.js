@@ -73,13 +73,14 @@ function renderHeader() {
   $("#repo").textContent = R.summary.root.split("/").slice(-2).join("/");
   const tabs = clear($("#tabs"));
   for (const [id, label] of TABS) tabs.append(h("button", { role: "tab", "aria-selected": String(view === id), text: label, onclick: () => go(id) }));
-  const sc = R.score, col = sc.overall >= 80 ? "var(--ok)" : sc.overall >= 60 ? "var(--warn)" : "var(--err)";
+  const sm = R.summary, empty = !(sm.operations + sm.rpcs + sm.tables + sm.routes + sm.sourceFiles);
+  const sc = R.score, col = empty ? "var(--mut)" : sc.overall >= 80 ? "var(--ok)" : sc.overall >= 60 ? "var(--warn)" : "var(--err)";
   const C = 2 * Math.PI * 14;
   const ring = sv("svg", { class: "ring", viewBox: "0 0 34 34" },
     sv("circle", { cx: 17, cy: 17, r: 14, fill: "none", stroke: "var(--line)", "stroke-width": 4 }),
     sv("circle", { cx: 17, cy: 17, r: 14, fill: "none", stroke: col, "stroke-width": 4, "stroke-dasharray": `${(C * sc.overall) / 100} ${C}`, transform: "rotate(-90 17 17)", "stroke-linecap": "round" }),
-    sv("text", { x: 17, y: 21, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "var(--ink)", text: sc.grade }));
-  clear($("#score")).append(ring, h("div", {}, h("b", { text: `${sc.overall}/100` }), h("div", { class: "mut", text: `${sc.counts.error} errors · ${sc.counts.warning} warnings` })));
+    sv("text", { x: 17, y: 21, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "var(--ink)", text: empty ? "–" : sc.grade }));
+  clear($("#score")).append(ring, h("div", {}, h("b", { text: empty ? "Nothing to analyse" : `${sc.overall}/100` }), h("div", { class: "mut", text: empty ? "No contracts, routes or code found" : `${sc.counts.error} errors · ${sc.counts.warning} warnings` })));
 }
 function go(id) { view = id; location.hash = id; render(); }
 window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (v && v !== view && TABS.some(t => t[0] === v)) { view = v; render(); } });
@@ -366,10 +367,12 @@ function renderImpact() {
         h("div", { class: "card" }, h("span", { class: "mut", text: "Agent-assisted commits" }), h("b", { text: String(c.agent.commits) })),
         h("div", { class: "card" }, h("span", { class: "mut", text: "Other commits" }), h("b", { text: String(c.other.commits) })),
         h("div", { class: "card" }, h("span", { class: "mut", text: "Median lines changed" }), h("b", { text: `${c.agent.medianLines} vs ${c.other.medianLines}` }), h("span", { class: "mut", text: "agent vs other" }))),
-      h("table", {}, h("thead", {}, h("tr", {}, ["Metric", "Agent-assisted", "Other", "Reading"].map(t => h("th", { text: t })))),
+      h("table", {}, h("thead", {}, h("tr", {}, ["Metric", "Agent-assisted", "Other", "Pooled reading", "Size-adjusted reading"].map(t => h("th", { text: t })))),
         h("tbody", {}, r.comparison.map(m => h("tr", {}, h("td", {}, h("b", { text: m.metric }), h("div", { class: "mut", text: `${m.better} is better` })),
           h("td", {}, h("div", { text: `${pctText(m.agent.rate)}  (${m.agent.k}/${m.agent.n})` }), ciBar(m.agent)), h("td", {}, h("div", { text: `${pctText(m.other.rate)}  (${m.other.k}/${m.other.n})` }), ciBar(m.other)),
-          h("td", {}, chip(m.verdict, m.verdict === "agent-assisted is worse" ? "error" : m.verdict === "agent-assisted is better" ? "ok" : "info")))))),
+          h("td", {}, chip(m.verdict, m.verdict === "agent-assisted is worse" ? "error" : m.verdict === "agent-assisted is better" ? "ok" : "info")), h("td", { class: "mut", text: m.sizeAdjusted || "" }))))),
+      h("h3", { text: "Test-touch rate by commit size (agent commits are usually bigger, and size drives every metric)" }),
+      h("table", {}, h("thead", {}, h("tr", {}, ["Size", "Agent-assisted", "Other", "Reading"].map(t => h("th", { text: t })))), h("tbody", {}, (r.stratified || []).map(st => { const m = st.comparison[0]; return h("tr", {}, h("td", { text: st.band }), h("td", { text: `${pctText(m.agent.rate)}  (${m.agent.k}/${m.agent.n})` }), h("td", { text: `${pctText(m.other.rate)}  (${m.other.k}/${m.other.n})` }), h("td", {}, chip(m.verdict, m.verdict === "no detectable difference" || m.verdict === "insufficient data" ? "info" : "ok"))); }))),
       h("h3", { text: "How to read this" }), h("ul", {}, r.caveats.map(t => h("li", { text: t }))));
     });
   void run;
