@@ -13,5 +13,5 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
-      - name: Dogfood: SeamLens checks itself
+      - name: "Dogfood, SeamLens checks itself"
         run: node dist/cli.js check . --fail-on none --format sarif --out seamlens.sarif
