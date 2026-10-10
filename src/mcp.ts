@@ -119,8 +119,11 @@ async function main() {
     }
   });
   await server.connect(new StdioServerTransport());
-  const stop = async () => { for (const h of handles.values()) await h.close(); process.exit(0); };
+  let stopping = false;
+  const stop = async () => { if (stopping) return; stopping = true; for (const h of handles.values()) await h.close().catch(() => {}); process.exit(0); };
   process.on("SIGINT", stop); process.on("SIGTERM", stop);
+  // A stdio MCP server must end when its client goes away; otherwise it lingers (and keeps any visual-map port open).
+  process.stdin.once("end", stop); process.stdin.once("close", stop);
   console.error(`seamlens-mcp ${VERSION} ready (read-only)${process.env.SEAMLENS_ROOTS ? `; roots: ${process.env.SEAMLENS_ROOTS}` : "; no SEAMLENS_ROOTS restriction"}`);
 }
 

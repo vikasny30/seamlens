@@ -144,7 +144,7 @@ test("mcp: SEAMLENS_ROOTS confines which directories can be read", async () => {
 });
 
 test("mcp: end to end over stdio with the official SDK client", async () => {
-  const transport = new StdioClientTransport({ command: "npx", args: ["tsx", path.join(ROOT, "src", "mcp.ts")], env: { ...process.env as Record<string, string>, SEAMLENS_ROOTS: ROOT } });
+  const transport = new StdioClientTransport({ command: process.execPath, args: ["--import", "tsx", path.join(ROOT, "src", "mcp.ts")], env: { ...process.env as Record<string, string>, SEAMLENS_ROOTS: ROOT } });
   const client = new Client({ name: "test", version: "1" });
   await client.connect(transport);
   try {
@@ -166,5 +166,12 @@ test("mcp: end to end over stdio with the official SDK client", async () => {
     assert.match(url, /^http:\/\/localhost:\d+$/);
     const html = await fetch(url).then(r => r.text());
     assert.match(html, /SeamLens/);
-  } finally { await client.close(); }
+  } finally {
+    const pid = transport.pid;
+    await client.close();
+    // the server must exit on its own once the client disconnects, even with the visual-map port open
+    const alive = (p: number) => { try { process.kill(p, 0); return true; } catch { return false; } };
+    for (let i = 0; i < 40 && pid && alive(pid); i++) await new Promise(r => setTimeout(r, 100));
+    assert.equal(pid ? alive(pid) : false, false, "MCP server process must exit after the client disconnects");
+  }
 });
