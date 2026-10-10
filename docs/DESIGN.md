@@ -55,7 +55,7 @@ Surfaces: **CLI** (`seamlens`), **web UI** (`seamlens serve`), **MCP server** (`
         └───────────┘   └─────────────┘
 ```
 
-Single npm package, ESM, TypeScript strict, Node >= 18. Runtime dependencies: `yaml`, `@modelcontextprotocol/sdk`, `zod`. Everything else (protobuf parser, SQL DDL parser, graph layout, Wilson intervals, SARIF writer) is in-repo, small, and tested.
+Single npm package, ESM, TypeScript strict, Node >= 20 (the MCP SDK's dependency chain requires it). Runtime dependencies: `yaml`, `@modelcontextprotocol/sdk`, `zod`. Everything else (protobuf parser, SQL DDL parser, graph layout, Wilson intervals, SARIF writer) is in-repo, small, and tested.
 
 ### 3.1 Data model (`src/model.ts`)
 

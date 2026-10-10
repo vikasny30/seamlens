@@ -23,6 +23,8 @@ Everything runs **locally**. Nothing is uploaded, no code from your repository i
 
 ## Quick start
 
+Requires Node 20 or newer.
+
 ```bash
 npx seamlens serve .        # visual map in your browser (localhost only)
 npx seamlens check .        # findings in the terminal

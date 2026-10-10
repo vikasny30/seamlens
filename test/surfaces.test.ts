@@ -163,7 +163,7 @@ test("mcp: end to end over stdio with the official SDK client", async () => {
     assert.equal(bad.isError, true); assert.match(bad.content[0].text, /Invalid arguments/);
     const map: any = await client.callTool({ name: "open_visual_map", arguments: { path: FIX } });
     const url = JSON.parse(map.content[0].text).result.url;
-    assert.match(url, /^http:\/\/localhost:\d+$/);
+    assert.match(url, /^http:\/\/127\.0\.0\.1:\d+$/);
     const html = await fetch(url).then(r => r.text());
     assert.match(html, /SeamLens/);
   } finally {

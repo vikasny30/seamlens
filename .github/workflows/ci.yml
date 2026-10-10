@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
-      matrix: { node: [18, 20, 22] }
+      matrix: { node: [20, 22, 24] }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }

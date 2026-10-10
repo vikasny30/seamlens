@@ -86,5 +86,5 @@ export async function startServer(rootIn: string, opts: { port?: number; host?: 
 
   await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(opts.port ?? 0, opts.host ?? "127.0.0.1", resolve); });
   const port = (server.address() as AddressInfo).port;
-  return { url: `http://localhost:${port}`, port, close: () => new Promise(r => server.close(() => r())) };
+  return { url: `http://127.0.0.1:${port}`, port, close: () => new Promise(r => server.close(() => r())) };
 }
