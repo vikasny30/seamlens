@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.vikasny30/seamlens",
+  "title": "SeamLens: API, gRPC and database contract checks",
+  "description": "Read-only MCP server that finds system-design problems and breaking changes in API, gRPC and database contracts, and measures AI-coding-agent impact from git history",
+  "repository": { "url": "https://github.com/vikasny30/seamlens", "source": "github" },
+  "version": "0.1.0",
+  "websiteUrl": "https://github.com/vikasny30/seamlens",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "seamlens",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "runtimeHint": "npx",
+      "packageArguments": [],
+      "environmentVariables": [
+        { "name": "SEAMLENS_ROOTS", "description": "Colon-separated list of directories the server may read. Strongly recommended.", "isRequired": false }
+      ]
+    }
+  ]
+}

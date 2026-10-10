@@ -1,0 +1,17 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { node: [18, 20, 22] }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ matrix.node }}" }
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - name: Dogfood: SeamLens checks itself
+        run: node dist/cli.js check . --fail-on none --format sarif --out seamlens.sarif

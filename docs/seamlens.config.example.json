@@ -1,0 +1,12 @@
+{
+  "disabledRules": ["API009", "RES005"],
+  "basePath": "/api",
+  "layers": [
+    { "name": "ui",     "match": "src/ui/**",     "mayImport": ["domain"] },
+    { "name": "domain", "match": "src/domain/**", "mayImport": ["infra"] },
+    { "name": "infra",  "match": "src/infra/**",  "mayImport": [] }
+  ],
+  "agentPatterns": ["my-internal-agent", "ai-pairing"],
+  "ignore": ["generated/**", "legacy/**"],
+  "moduleDepth": 2
+}

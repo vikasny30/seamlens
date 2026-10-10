@@ -1,0 +1,17 @@
+# .github/workflows/contracts.yml in YOUR repository
+name: contracts
+on: pull_request
+permissions: { contents: read, security-events: write }
+jobs:
+  seamlens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }          # the diff needs history
+      - uses: vikasny30/seamlens@v0
+        with:
+          fail-on: error
+          base: origin/${{ github.base_ref }}
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: seamlens.sarif }

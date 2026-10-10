@@ -1,0 +1,67 @@
+{
+  "name": "seamlens",
+  "version": "0.1.0",
+  "description": "See the seams of your system: a visual end-to-end map of API, gRPC, database and code contracts with system-design checks, breaking-change diffs, and AI-coding-agent impact analytics. CLI, web UI and MCP server.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "seamlens": "dist/cli.js",
+    "seamlens-mcp": "dist/mcp.js"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/copy-ui.mjs",
+    "dev": "tsx src/cli.ts",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "api-contracts",
+    "openapi",
+    "protobuf",
+    "grpc",
+    "breaking-changes",
+    "system-design",
+    "architecture",
+    "dependency-graph",
+    "visualization",
+    "ai-coding-agents",
+    "coding-agents",
+    "evaluation",
+    "benchmark",
+    "dora",
+    "engineering-metrics",
+    "engineering-leadership",
+    "claude-code",
+    "sarif"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0",
+  "author": "Vikas Shivpuriya <vikas.ny30@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vikasny30/seamlens.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

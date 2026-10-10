@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package shop.orders;
+
+enum Status {
+  PENDING = 1;
+  SHIPPED = 2;
+}
+
+message Order {
+  string id = 1;
+  double price = 2;
+  string customer_id = 4;
+  Status status = 5;
+}
+
+message ListOrdersRequest {
+  string customer_id = 1;
+}
+
+service OrderService {
+  rpc GetOrder(Order) returns (Order);
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc cancel_order(CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+message ListOrdersResponse { repeated Order orders = 1; }
+message CancelOrderRequest { string id = 1; }
+message CancelOrderResponse { bool ok = 1; }

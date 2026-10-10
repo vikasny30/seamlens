@@ -1,0 +1,22 @@
+name: "SeamLens contract check"
+description: "Find system-design problems and breaking changes in API, gRPC and database contracts. Uploads SARIF so findings appear on the pull request."
+branding: { icon: "shield", color: "blue" }
+inputs:
+  path:     { description: "Repository path", default: "." }
+  fail-on:  { description: "Fail the job on this severity or worse: error, warning or none", default: "error" }
+  base:     { description: "Git ref to diff contracts against (breaking-change gate). Leave empty to skip.", default: "" }
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with: { node-version: "20" }
+    - name: Contract check (SARIF)
+      shell: bash
+      run: npx --yes seamlens check "${{ inputs.path }}" --format sarif --fail-on none --out seamlens.sarif
+    - name: Fail on findings
+      shell: bash
+      run: npx --yes seamlens check "${{ inputs.path }}" --fail-on "${{ inputs.fail-on }}" > "$GITHUB_STEP_SUMMARY" || exit 1
+    - name: Breaking-change gate
+      if: inputs.base != ''
+      shell: bash
+      run: npx --yes seamlens diff "${{ inputs.path }}" --base "${{ inputs.base }}" --format md >> "$GITHUB_STEP_SUMMARY"

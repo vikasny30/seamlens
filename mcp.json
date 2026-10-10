@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "seamlens": {
+      "command": "npx",
+      "args": ["-y", "seamlens", "seamlens-mcp"],
+      "env": { "SEAMLENS_ROOTS": "/Users/you/Developer" }
+    }
+  }
+}
