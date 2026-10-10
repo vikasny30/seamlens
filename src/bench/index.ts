@@ -75,6 +75,8 @@ function sh(cmd: string, cwd: string, timeoutMs: number, extraEnv: Record<string
     let buf = "", timedOut = false;
     const take = (d: Buffer) => { buf += d.toString(); if (buf.length > 40_000) buf = buf.slice(-20_000); };
     child.stdout.on("data", take); child.stderr.on("data", take);
+    // An agent that exits without reading its input closes the pipe; the resulting EPIPE must not crash the harness.
+    child.stdin.on("error", () => {}); child.stdout.on("error", () => {}); child.stderr.on("error", () => {});
     if (stdin !== undefined) child.stdin.end(stdin); else child.stdin.end();
     const killer = setTimeout(() => { timedOut = true; try { process.kill(-child.pid!, "SIGKILL"); } catch { /* gone */ } }, timeoutMs);
     child.on("close", code => { clearTimeout(killer); resolve({ code, seconds: Math.round((Date.now() - t0) / 100) / 10, tail: buf.slice(-1500), timedOut }); });

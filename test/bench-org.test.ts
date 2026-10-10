@@ -110,6 +110,19 @@ test("bench run: solved vs unsolved, hidden tests protected, scope creep measure
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("bench run: an agent that exits without reading its stdin does not crash the harness (EPIPE regression)", async () => {
+  const { dir } = benchRepo();
+  try {
+    const [t] = await validateTasks(dir, generateTasks(dir), { testCmd: TEST_CMD });
+    const big = { ...t, problem_statement: "x".repeat(4_000_000) };     // far larger than a pipe buffer, so the write is still pending when the agent exits
+    for (let i = 0; i < 5; i++) {
+      const [row] = await runBenchmark(dir, [big], { testCmd: TEST_CMD, agentCmd: "exit 0" });
+      assert.equal(row.solved, false);
+      assert.ok(!/error/i.test(row.note ?? ""), row.note);
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("bench run: only validated tasks are run", async () => {
   const { dir } = benchRepo();
   try {
